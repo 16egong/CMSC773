@@ -49,7 +49,7 @@ def load_posts(PATH):
     
     return user_to_post, post_to_words, post_to_metadata
     
-# Creates a post -> (user, tokens, label) dataset using a user -> label and the three lists created in load
+# Creates a post -> (user, tokens, label) dataset using a user -> label data file and the three lists created in load_posts
 def load_classification(PATH, user_to_post, post_to_words, post_to_metadata):
     data = pd.read_csv(PATH)
     index = data.index
@@ -85,7 +85,7 @@ def filter_posts(post_to_label, post_to_metadata):
             
         if subreddit not in subreddits_to_filter:
             filtered_dict[post] = post_to_label[post]
-    return filtered_dict, SW_posts, users_to_SWtimestamps
+    return filtered_dict, SW_dict, users_to_SWtimestamps
     
 # Usage example
 #POSTPATH = './expert/expert_posts.csv'
