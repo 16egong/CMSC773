@@ -4,8 +4,10 @@ import tqdm
 import string
 import math
 import sys
+import pickle
 
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords 
 from itertools import chain
 from collections import defaultdict
 
@@ -87,13 +89,59 @@ def filter_posts(post_to_label, post_to_metadata):
             filtered_dict[post] = post_to_label[post]
     return filtered_dict, SW_dict, users_to_SWtimestamps
     
-# Usage example
-#POSTPATH = './expert/expert_posts.csv'
-#LABELPATH = './expert/expert.csv'
+# Filters post -> (user, tokens, label) dicts for English stopwords
+def filter_stopwords(post_to_label):
+    stop_words = set(stopwords.words('english')) 
     
-#user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
-#post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
-#filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+    filtered_dict = {}
+    for key in post_to_label.keys():
+        tokens = post_to_label[key][1]
+        new_tokens = [[word for word in sent if word not in stop_words] for sent in tokens]
+        
+        filtered_dict[key] = (post_to_label[key][0], new_tokens, post_to_label[key][2])
+    return filtered_dict
+    
+def save_to_folder(FOLDERPATH, user_to_post, post_to_metadata, post_to_label, sw_posts, sw_timestamps):
+    with open(FOLDERPATH + 'utp.pickle', 'wb') as handle:
+        pickle.dump(user_to_post, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(FOLDERPATH + 'ptm.pickle', 'wb') as handle:
+        pickle.dump(post_to_metadata, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(FOLDERPATH + 'data.pickle', 'wb') as handle:
+        pickle.dump(post_to_label, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(FOLDERPATH + 'swd.pickle', 'wb') as handle:
+        pickle.dump(sw_posts, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(FOLDERPATH + 'swt.pickle', 'wb') as handle:
+        pickle.dump(sw_timestamps, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+def load_from_folder(FOLDERPATH):
+    with open(FOLDERPATH + 'utp.pickle', 'rb') as handle:
+        user_to_post = pickle.load(handle)
+    with open(FOLDERPATH + 'ptm.pickle', 'rb') as handle:
+        post_to_metadata = pickle.load(handle)
+    with open(FOLDERPATH + 'data.pickle', 'rb') as handle:
+        post_to_label = pickle.load(handle)
+    with open(FOLDERPATH + 'swd.pickle', 'rb') as handle:
+        sw_posts = pickle.load(handle)
+    with open(FOLDERPATH + 'swt.pickle', 'rb') as handle:
+        sw_timestamps = pickle.load(handle)
+    return user_to_post, post_to_metadata, post_to_label, sw_posts, sw_timestamps
+    
+# Usage example
+# POSTPATH = './expert/expert_posts.csv'
+# LABELPATH = './expert/expert.csv'
+# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
+# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
+# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+ 
+# Saving all data structures to a folder (make sure the folder exists)
+# FOLDERPATH = './processed/'
+# save_to_folder(FOLDERPATH, user_to_post, post_to_metadata, filtered_data, sw_posts, sw_timestamps)
+
+# Loading all data structures from a folder
+# user_to_post, post_to_metadata, filtered_data, sw_posts, sw_timestamps = load_from_folder(FOLDERPATH)
+
+# Filter for stop words:
+# filter_stopwords(filtered_data)
 
 # For crowd data use:
 # POSTPATH = './crowd/train/shared_task_posts.csv'
