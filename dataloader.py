@@ -11,7 +11,7 @@ from nltk.corpus import stopwords
 from itertools import chain
 from collections import defaultdict
 
-def load_posts(PATH):
+def load_posts(PATH, user_subset = None):
 
     data = pd.read_csv(PATH)
 
@@ -23,19 +23,37 @@ def load_posts(PATH):
     subreddits = data['subreddit']
     post_title = data['post_title']
     posts = data['post_body']
+    
+    if user_subset is not None:
+        print("Filtering subset...")
+        index = [i for i in tqdm.tqdm(index) if user_ids[i] in user_subset]
 
-    # Tokenize speech into sentences
-    print("Tokenizing sentences...")
-    sents = [([sent for sent in sent_tokenize(post)] if type(post) == type("") else []) for post in tqdm.tqdm(posts)]
-        
-    # remove punctuation and normalize to lowercase
-    print("Normalizing...")
-    translate_dict = dict((ord(char), None) for char in string.punctuation)  
-    sents = [[sent.translate(translate_dict).lower() for sent in sent_group] for sent_group in sents]
+        # Tokenize speech into sentences
+        print("Tokenizing sentences...")
+        sents = dict((i,([sent for sent in sent_tokenize(posts[i])] if type(posts[i]) == type("") else [])) for i in tqdm.tqdm(index))
+            
+        # remove punctuation and normalize to lowercase
+        print("Normalizing...")
+        translate_dict = dict((ord(char), None) for char in string.punctuation)  
+        sents = dict((i,[sent.translate(translate_dict).lower() for sent in sents[i]]) for i in tqdm.tqdm(index))
 
-    # tokenize each sentence into words
-    print("Tokenizing sentences into words...")
-    words = [[nltk.word_tokenize(sent) for sent in sent_group] for sent_group in tqdm.tqdm(sents)]
+        # tokenize each sentence into words
+        print("Tokenizing sentences into words...")
+        words = dict((i,[nltk.word_tokenize(sent) for sent in sents[i]]) for i in tqdm.tqdm(index))
+    
+    else:
+        # Tokenize speech into sentences
+        print("Tokenizing sentences...")
+        sents = [([sent for sent in sent_tokenize(post)] if type(post) == type("") else []) for post in tqdm.tqdm(posts)]
+            
+        # remove punctuation and normalize to lowercase
+        print("Normalizing...")
+        translate_dict = dict((ord(char), None) for char in string.punctuation)  
+        sents = [[sent.translate(translate_dict).lower() for sent in sent_group] for sent_group in sents]
+
+        # tokenize each sentence into words
+        print("Tokenizing sentences into words...")
+        words = [[nltk.word_tokenize(sent) for sent in sent_group] for sent_group in tqdm.tqdm(sents)]
     
     user_to_post = defaultdict(list)
     for i in index:
@@ -126,6 +144,15 @@ def load_from_folder(FOLDERPATH):
         sw_timestamps = pickle.load(handle)
     return user_to_post, post_to_metadata, post_to_label, sw_posts, sw_timestamps
     
+def load_user_subset_from_train(PATH, subset = 100):
+    data = pd.read_csv(PATH)
+    index = data.index
+    user_ids = data['user_id']
+    
+    user_list = list(set(user_ids))
+    
+    return set(user_list[:min(subset, len(user_list))])
+    
 # Usage example
 # POSTPATH = './expert/expert_posts.csv'
 # LABELPATH = './expert/expert.csv'
@@ -133,7 +160,7 @@ def load_from_folder(FOLDERPATH):
 # post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
 # filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
  
-# Saving all data structures to a folder (make sure the folder exists)
+# Saving all data structures to a folder (make sure the folder exists and you pass this method these 5 data structures)
 # FOLDERPATH = './processed/'
 # save_to_folder(FOLDERPATH, user_to_post, post_to_metadata, filtered_data, sw_posts, sw_timestamps)
 
@@ -146,3 +173,12 @@ def load_from_folder(FOLDERPATH):
 # For crowd data use:
 # POSTPATH = './crowd/train/shared_task_posts.csv'
 # LABELPATH = './crowd/train/crowd_train.csv'
+
+# Loading a subset of data, the subset size is 100, which means a subset of 100 users from given classification file.
+# POSTPATH = './crowd/train/shared_task_posts.csv'
+# LABELPATH = './crowd/train/crowd_train.csv'
+# USERPATH = './crowd/train/task_C_train.posts.csv'
+# users = load_user_subset_from_train(USERPATH, subset = 100)
+# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, user_subset = users)
+# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
+# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
