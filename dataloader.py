@@ -66,13 +66,14 @@ def load_classification(PATH, user_to_post, post_to_words, post_to_metadata):
     return post_to_label
     
 # Filters posts from mental health related subreddits
-# Also returns a dict of users to timestamps of their SW posts
+# Also returns a dict of users to timestamps of their SW posts and a dict of only SW posts
 def filter_posts(post_to_label, post_to_metadata):
     subreddits_to_filter = ["Anger", "BPD", "EatingDisorders", "MMFB", "StopSelfHarm", "SuicideWatch", "addiction", 
                             "alcoholism", "depression", "feelgood", "getting over it", "hardshipmates", "mentalhealth", 
                             "psychoticreddit", "ptsd", "rapecounseling", "schizophrenia", "socialanxiety", "survivorsofabuse", "traumatoolbox"]
     
     filtered_dict = {}
+    SW_dict = {}
     users_to_SWtimestamps = defaultdict(list)
     for post in post_to_label.keys():
         user = post_to_label[post][0]
@@ -80,16 +81,20 @@ def filter_posts(post_to_label, post_to_metadata):
         
         if subreddit == "SuicideWatch":
             users_to_SWtimestamps[user].append(post_to_metadata[post][0])
+            SW_dict[post] = post_to_label[post]
             
         if subreddit not in subreddits_to_filter:
             filtered_dict[post] = post_to_label[post]
-    return filtered_dict, users_to_SWtimestamps
+    return filtered_dict, SW_posts, users_to_SWtimestamps
     
 # Usage example
-POSTPATH = './expert/expert_posts.csv'
-LABELPATH = './expert/expert.csv'
+#POSTPATH = './expert/expert_posts.csv'
+#LABELPATH = './expert/expert.csv'
     
-user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
-post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
-filtered_data, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
-print(sw_timestamps)
+#user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
+#post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
+#filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+
+# For crowd data use:
+# POSTPATH = './crowd/train/shared_task_posts.csv'
+# LABELPATH = './crowd/train/crowd_train.csv'
