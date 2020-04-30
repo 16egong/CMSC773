@@ -8,8 +8,6 @@ import numpy as np
 def train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=False):
     if load_existing:
         user_to_post, post_to_metadata, filtered_data, sw_posts, sw_timestamps = dataloader.load_from_folder(FOLDERPATH)
-        filtered_data = dataloader.filter_stopwords(filtered_data)
-        sw_posts = dataloader.filter_stopwords(sw_posts)
         
     else:
         users = dataloader.load_user_subset_from_train(USERPATH, subset = 1000)
@@ -55,17 +53,25 @@ def print_model_info(mdl):
 
 def get_topic_vecs(mdl, post_to_data):
     post_to_topic_vec = {}
-    for post in post_to_data.keys():
+    print("Getting topic distributions...")
+    for post in tqdm.tqdm(post_to_data.keys()):
         words = chain.from_iterable(post_to_data[post][1])
         label = post_to_data[post][2]
-        post_to_topic_vec[post] = (mdl.infer(mdl.make_doc(words)), label)
+        post_to_topic_vec[post] = (mdl.infer(mdl.make_doc(words))[0], [1 if label == 'd' else 0])
     return post_to_topic_vec
+    
+def vectorize_data_set(mdl, FOLDERPATH):
+    _, _, post_to_data, _, _ = dataloader.load_from_folder(FOLDERPATH)
+    post_to_vec = get_topic_vecs(mdl, post_to_data)
+    X = np.array([post_to_vec[post][0] for post in post_to_vec.keys()])
+    Y = np.array([post_to_vec[post][1] for post in post_to_vec.keys()])
+    return X,Y
     
 # Usage Example
 # POSTPATH = './crowd/train/shared_task_posts.csv'
 # LABELPATH = './crowd/train/crowd_train.csv'
 # USERPATH = './crowd/train/task_C_train.posts.csv'
-# FOLDERPATH = './crowd_processed/'
+FOLDERPATH = './crowd_processed/'
     
 # mdl = train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=True)
 # print_model_info(mdl)
@@ -79,3 +85,14 @@ def get_topic_vecs(mdl, post_to_data):
 # inference: get vector of topic probabilities from list of words
 # vec = mdl.infer(mdl.make_doc(["i", "feel", "very", "depressed"]))
 # print(vec[0])
+
+# use existing model to vectorize existing dataset and save it
+# mdl = tp.SLDAModel.load(FOLDERPATH + 'crowd_slda_model.bin')
+
+# X, Y = vectorize_data_set(mdl, FOLDERPATH)
+# np.save(FOLDERPATH + "trainX.npy",X)
+# np.save(FOLDERPATH + "trainY.npy",Y)
+    
+# loading existing dataset
+# X = np.load(FOLDERPATH + "trainX.npy")
+# Y = np.load(FOLDERPATH + "trainY.npy")

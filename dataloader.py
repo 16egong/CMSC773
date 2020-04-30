@@ -107,6 +107,23 @@ def filter_posts(post_to_label, post_to_metadata):
             filtered_dict[post] = post_to_label[post]
     return filtered_dict, SW_dict, users_to_SWtimestamps
     
+def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 1.5):
+    filtered_dict = {}
+    for post in post_to_label.keys():
+        user, words, label = post_to_label[post]
+        time = post_to_metadata[post][0]
+        SWtimes = sw_timestamps[user]
+        if len(SWtimes) > 0:
+            near = False
+            for time_SW in SWtimes:
+                if abs(time - time_SW) < thresh:
+                    near = True
+            if near:
+                filtered_dict[post] = (user, words, label)
+        else:
+            filtered_dict[post] = (user, words, label)
+    return filtered_dict
+    
 # Filters post -> (user, tokens, label) dicts for English stopwords
 def filter_stopwords(post_to_label):
     stop_words = set(stopwords.words('english')) 
@@ -154,11 +171,14 @@ def load_user_subset_from_train(PATH, subset = 100):
     return set(user_list[:min(subset, len(user_list))])
     
 # Usage example
-# POSTPATH = './expert/expert_posts.csv'
-# LABELPATH = './expert/expert.csv'
-# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
-# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
-# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+POSTPATH = './expert/expert_posts.csv'
+LABELPATH = './expert/expert.csv'
+user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
+post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
+filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+
+# Filtering posts far away from SW_posts:
+filtered_data = filter_near_SW(filtered_data, post_to_metadata, sw_timestamps)
  
 # Saving all data structures to a folder (make sure the folder exists and you pass this method these 5 data structures)
 # FOLDERPATH = './processed/'
