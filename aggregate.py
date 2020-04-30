@@ -8,8 +8,8 @@ def aggregate_posts(FOLDERPATH: str, post_classifications: defaultdict) -> defau
     user_to_post_label = defaultdict(list)
     
     # assumes post_classications contains user_id and the classification as y_prime
-    for p in post_classifications:
-        post = post_classifications[p]
+    for post_id in post_classifications:
+        post = post_classifications[post_id]
         user_to_post_label[post['user_id']].append(post['y_prime'])
     save_aggregate(FOLDERPATH, user_to_post_label)
     return user_to_post_label
