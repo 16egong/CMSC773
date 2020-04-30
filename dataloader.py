@@ -107,9 +107,10 @@ def filter_posts(post_to_label, post_to_metadata):
             filtered_dict[post] = post_to_label[post]
     return filtered_dict, SW_dict, users_to_SWtimestamps
     
-def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 1.5):
+def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 2):
     filtered_dict = {}
-    for post in post_to_label.keys():
+    print("Filtering posts far away from SW posts...")
+    for post in tqdm.tqdm(post_to_label.keys()):
         user, words, label = post_to_label[post]
         time = post_to_metadata[post][0]
         SWtimes = sw_timestamps[user]

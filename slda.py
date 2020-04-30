@@ -15,6 +15,8 @@ def train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_
         user_to_post, post_to_words, post_to_metadata = dataloader.load_posts(POSTPATH, user_subset = users)
         post_to_label = dataloader.load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
         filtered_data, sw_posts, sw_timestamps = dataloader.filter_posts(post_to_label, post_to_metadata)
+        
+        filtered_data = dataloader.filter_near_SW(filtered_data, post_to_metadata, sw_timestamps)
 
         filtered_data = dataloader.filter_stopwords(filtered_data)
         sw_posts = dataloader.filter_stopwords(sw_posts)
@@ -68,16 +70,17 @@ def vectorize_data_set(mdl, FOLDERPATH):
     return X,Y
     
 # Usage Example
-# POSTPATH = './crowd/train/shared_task_posts.csv'
-# LABELPATH = './crowd/train/crowd_train.csv'
-# USERPATH = './crowd/train/task_C_train.posts.csv'
+POSTPATH = './crowd/train/shared_task_posts.csv'
+LABELPATH = './crowd/train/crowd_train.csv'
+USERPATH = './crowd/train/task_C_train.posts.csv'
 FOLDERPATH = './crowd_processed/'
     
-# mdl = train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=True)
+mdl = train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=False)
 # print_model_info(mdl)
 
-# save from file
-# mdl.save(FOLDERPATH + 'crowd_slda_model.bin')
+# save to file
+mdl.save(FOLDERPATH + 'crowd_slda_model.bin')
+
 # load from file
 # mdl = tp.SLDAModel.load(FOLDERPATH + 'crowd_slda_model.bin')
 # 
@@ -89,9 +92,9 @@ FOLDERPATH = './crowd_processed/'
 # use existing model to vectorize existing dataset and save it
 # mdl = tp.SLDAModel.load(FOLDERPATH + 'crowd_slda_model.bin')
 
-# X, Y = vectorize_data_set(mdl, FOLDERPATH)
-# np.save(FOLDERPATH + "trainX.npy",X)
-# np.save(FOLDERPATH + "trainY.npy",Y)
+X, Y = vectorize_data_set(mdl, FOLDERPATH)
+np.save(FOLDERPATH + "trainX.npy",X)
+np.save(FOLDERPATH + "trainY.npy",Y)
     
 # loading existing dataset
 # X = np.load(FOLDERPATH + "trainX.npy")
