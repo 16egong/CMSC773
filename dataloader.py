@@ -11,7 +11,7 @@ from nltk.corpus import stopwords
 from itertools import chain
 from collections import defaultdict
 
-def load_posts(PATH, user_subset = None):
+def load_posts(PATH, user_subset = None, append_title = False):
 
     data = pd.read_csv(PATH)
 
@@ -23,6 +23,13 @@ def load_posts(PATH, user_subset = None):
     subreddits = data['subreddit']
     post_title = data['post_title']
     posts = data['post_body']
+    
+    if append_title:
+        combined_posts = [None] * len(posts)
+        for i in index:
+            combined_posts[i] = str(post_title[i]) + ((" . " + posts[i]) if type(posts[i]) == type("") else "")
+    
+        posts = combined_posts
     
     if user_subset is not None:
         print("Filtering subset...")
@@ -174,9 +181,10 @@ def load_user_subset_from_train(PATH, subset = 100):
 # Usage example
 # POSTPATH = './expert/expert_posts.csv'
 # LABELPATH = './expert/expert.csv'
-# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH)
+# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, append_title=True)
 # post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
 # filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+# print(sw_posts["2il6xf"])
 
 # Filtering posts far away from SW_posts:
 # filtered_data = filter_near_SW(filtered_data, post_to_metadata, sw_timestamps)
