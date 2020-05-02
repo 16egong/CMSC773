@@ -93,6 +93,7 @@ def get_vectors_from_post_set(post_to_data, words_to_index):
 		#print(k)
 
 		vector = [0]*vocab_len
+		#print(vector)
 
 		post = [j for i in v[1] for j in i]
 
@@ -109,7 +110,7 @@ def get_vectors_from_post_set(post_to_data, words_to_index):
 		#print(vector)
 		#print(sum(vector))
 
-		post_to_vec[k] = vector
+		post_to_vec[k] = (vector, [1 if v[2] == 'd' else 0] )
 
 	return post_to_vec
 
