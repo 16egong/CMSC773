@@ -35,6 +35,22 @@ def train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_
     return mdl
 
 
+
+
+def train_slda_model_from_data(filtered_data, topics=30):
+    mdl = tp.SLDAModel(k=topics, vars=['b'])
+    for data in tqdm.tqdm(filtered_data.keys()):
+        mdl.add_doc(chain.from_iterable(filtered_data[data][1]), [1 if filtered_data[data][2] == 'd' else 0])
+
+    print("Beginning sLDA training...")
+    for i in range(0, 1000, 10):
+        mdl.train(10)
+        if(i % 100 == 0):
+            print('Iteration: {}\tLog-likelihood: {}'.format(i, mdl.ll_per_word))
+    print("Finished Training")
+    return mdl
+
+
 def print_model_info(mdl):
 
     slda_coefficients = mdl.get_regression_coef(0)
@@ -69,17 +85,18 @@ def vectorize_data_set(mdl, FOLDERPATH):
     Y = np.array([post_to_vec[post][1] for post in post_to_vec.keys()])
     return X,Y
     
+
 # Usage Example
-POSTPATH = './crowd/train/shared_task_posts.csv'
-LABELPATH = './crowd/train/crowd_train.csv'
-USERPATH = './crowd/train/task_C_train.posts.csv'
-FOLDERPATH = './crowd_processed/'
+#POSTPATH = './crowd/train/shared_task_posts.csv'
+#LABELPATH = './crowd/train/crowd_train.csv'
+#USERPATH = './crowd/train/task_C_train.posts.csv'
+#FOLDERPATH = './crowd_processed/'
     
-mdl = train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=False)
+#mdl = train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_existing=False)
 # print_model_info(mdl)
 
 # save to file
-mdl.save(FOLDERPATH + 'crowd_slda_model.bin')
+#mdl.save(FOLDERPATH + 'crowd_slda_model.bin')
 
 # load from file
 # mdl = tp.SLDAModel.load(FOLDERPATH + 'crowd_slda_model.bin')
@@ -92,9 +109,9 @@ mdl.save(FOLDERPATH + 'crowd_slda_model.bin')
 # use existing model to vectorize existing dataset and save it
 # mdl = tp.SLDAModel.load(FOLDERPATH + 'crowd_slda_model.bin')
 
-X, Y = vectorize_data_set(mdl, FOLDERPATH)
-np.save(FOLDERPATH + "trainX.npy",X)
-np.save(FOLDERPATH + "trainY.npy",Y)
+#X, Y = vectorize_data_set(mdl, FOLDERPATH)
+#np.save(FOLDERPATH + "trainX.npy",X)
+#np.save(FOLDERPATH + "trainY.npy",Y)
     
 # loading existing dataset
 # X = np.load(FOLDERPATH + "trainX.npy")
