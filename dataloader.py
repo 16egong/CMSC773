@@ -207,10 +207,10 @@ def load_user_subset_from_train(PATH, subset = 100):
 # LABELPATH = './crowd/train/crowd_train.csv'
 
 # Loading a subset of data, the subset size is 100, which means a subset of 100 users from given classification file.
-POSTPATH = './crowd/train/shared_task_posts.csv'
-LABELPATH = './crowd/train/crowd_train.csv'
-USERPATH = './crowd/train/task_C_train.posts.csv'
-users = load_user_subset_from_train(USERPATH, subset = 100)
-user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, user_subset = users)
-post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata, user_subset = users)
-filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+# POSTPATH = './crowd/train/shared_task_posts.csv'
+# LABELPATH = './crowd/train/crowd_train.csv'
+# USERPATH = './crowd/train/task_C_train.posts.csv'
+# users = load_user_subset_from_train(USERPATH, subset = 100)
+# user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, user_subset = users)
+# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata, user_subset = users)
+# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
