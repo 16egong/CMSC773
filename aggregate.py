@@ -10,7 +10,7 @@ def aggregate_posts(FOLDERPATH: str, post_classifications: defaultdict) -> defau
     # assumes post_classications contains user_id and the classification as y_prime
     for post_id in post_classifications:
         post = post_classifications[post_id]
-        user_to_post_label[post['user_id']].append(post['y_prime'])
+        user_to_post_label[post[0]].append(post[1])
     save_aggregate(FOLDERPATH, user_to_post_label)
     return user_to_post_label
 
@@ -28,35 +28,13 @@ def load_aggregate(FOLDERPATH):
 
 # Usage example
 # sample_data = {}
-# post_abcde = {}
-# post_abcde['text'] = "hey yo"
-# post_abcde['user_id'] = "1234"
-# post_abcde['y'] = "d"
-# post_abcde['y_prime'] = "d"
-
-# post_qwert = {}
-# post_qwert['text'] = "yo"
-# post_qwert['user_id'] = "1234"
-# post_qwert['y'] = "d"
-# post_qwert['y_prime'] = "a"
-
-# post_efghi = {}
-# post_efghi['text'] = "life poop"
-# post_efghi['user_id'] = "1234"
-# post_efghi['y'] = "d"
-# post_efghi['y_prime'] = "d"
-
-# post_zxcvb = {}
-# post_zxcvb['post'] = "hungry"
-# post_zxcvb['user_id'] = "3456"
-# post_zxcvb['y'] = "a"
-# post_zxcvb['y_prime'] = "a"
 
 
-# sample_data['2j6par'] = post_abcde
-# sample_data['2j6qn6'] = post_efghi
-# sample_data['2daejg '] = post_qwert
-# sample_data['wrfw1'] = post_zxcvb
+
+# sample_data['2j6par'] = (user_id, y_pred)
+# sample_data['2j6qn6'] = (user_id, y_pred)
+# sample_data['2daejg '] = (user_id, y_pred)
+# sample_data['wrfw1'] = (user_id, y_pred)
 
 # FOLDERPATH = './processed/'
 
