@@ -77,18 +77,21 @@ def load_posts(PATH, user_subset = None, append_title = False):
     return user_to_post, post_to_words, post_to_metadata
     
 # Creates a post -> (user, tokens, label) dataset using a user -> label data file and the three lists created in load_posts
-def load_classification(PATH, user_to_post, post_to_words, post_to_metadata):
+def load_classification(PATH, user_to_post, post_to_words, post_to_metadata, user_subset = None):
     data = pd.read_csv(PATH)
     index = data.index
     user_ids = data['user_id']
     labels = data['label']
     
+    print(len(user_to_post))
+    
     post_to_label = {}
     for i in index:
-        label = labels[i] if type(labels[i]) == type("") else "None"
-        for j in user_to_post[user_ids[i]]:
-            
-            post_to_label[j] = (user_ids[i], post_to_words[j], label)
+        if (user_subset is None or user_ids[i] in user_subset):
+            label = labels[i] if type(labels[i]) == type("") else "None"
+            for j in user_to_post[user_ids[i]]:
+                
+                post_to_label[j] = (user_ids[i], post_to_words[j], label)
     
     return post_to_label
     
@@ -209,5 +212,5 @@ def load_user_subset_from_train(PATH, subset = 100):
 # USERPATH = './crowd/train/task_C_train.posts.csv'
 # users = load_user_subset_from_train(USERPATH, subset = 100)
 # user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, user_subset = users)
-# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata)
+# post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata, user_subset = users)
 # filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)

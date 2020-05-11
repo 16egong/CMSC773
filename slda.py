@@ -34,7 +34,18 @@ def train_slda_model(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, topics=30, load_
     print("Finished Training")
     return mdl
 
+def train_lda_model_from_data(filtered_data, topics=30):
+    mdl = tp.LDAModel(k=topics)
+    for data in tqdm.tqdm(filtered_data.keys()):
+        mdl.add_doc(chain.from_iterable(filtered_data[data][1]))
 
+    print("Beginning LDA training...")
+    for i in range(0, 1000, 10):
+        mdl.train(10)
+        if(i % 100 == 0):
+            print('Iteration: {}\tLog-likelihood: {}'.format(i, mdl.ll_per_word))
+    print("Finished Training")
+    return mdl
 
 
 def train_slda_model_from_data(filtered_data, topics=30):
