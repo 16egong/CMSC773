@@ -4,7 +4,7 @@ import dataloader
 import itertools
 import pickle
 import tqdm
-from sklearn.decomposition import PCA
+from sklearn.decomposition import IncrementalPCA
 
 def get_bow_features(POSTPATH, LABELPATH, USERPATH, FOLDERPATH, load_existing=False):
 
@@ -80,39 +80,40 @@ def generate_vocabulary(post_to_data):
 	return words_to_index, index_to_words
 
 
-def get_vectors_from_post_set(post_to_data, words_to_index):
+def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components=40, batch_size = 500):
 
 	post_to_vec = {}
 
 
 	vocab_len = len(words_to_index)
 
+	i_pca = IncrementalPCA(n_components=n_components)
+
+	vectors = []
 
 	for k,v in tqdm.tqdm(post_to_data.items()):
 
-		#print(k)
+		if(len(vectors) == batch_size):
+			vectors = np.stack(vectors)
 
-		vector = [0]*vocab_len
-		#print(vector)
+			i_pca.partial_fit(vectors)
 
-		post = [j for i in v[1] for j in i]
+			vectors = []
 
-		for token in post:
 
-			if(token not in words_to_index):
+		vectors.append(get_vector_from_post(v,words_to_index))
 
-				vector[0] += 1
 
-			else:
+	for k,v in tqdm.tqdm(post_to_data.items()):
 
-				vector[words_to_index[token]] += 1
+		vector = get_vector_from_post(v,words_to_index)
 
-		#print(vector)
-		#print(sum(vector))
+		pca_vector = i_pca.transform(vector.reshape(1,-1))[0]
 
-		post_to_vec[k] = (vector, [1 if v[2] == 'd' else 0] )
+		post_to_vec[k] = (pca_vector, [1 if v[2] == 'd' else 0] )
 
 	return post_to_vec
+
 
 
 def get_vector_from_post(post, words_to_index):
@@ -121,7 +122,7 @@ def get_vector_from_post(post, words_to_index):
 
 	vector = [0]*vocab_len
 
-	post = [j for i in v[1] for j in i]
+	post = [j for i in post[1] for j in i]
 
 	for token in post:
 
@@ -140,57 +141,6 @@ def get_vector_from_post(post, words_to_index):
 
 
 
-
-
-
-def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components = 30):
-
-	post_to_vec = {}
-	vocab_len = len(words_to_index)
-	X=[]
-	posts =[]
-
-
-	for k,v in tqdm.tqdm(post_to_data.items()):
-
-		if(len(X) == 1000):
-			break
-
-		vector = [0]*vocab_len
-
-		post = list(itertools.chain.from_iterable(v[1]))
-
-		for token in post:
-
-			if(token not in words_to_index):
-
-				vector[0] += 1
-
-			else:
-
-				vector[words_to_index[token]] += 1
-
-		#print(vector)
-		#print(sum(vector))
-		posts.append(k)
-		X.append(np.array(vector))
-
-	X = np.stack(X)
-
-	pca = PCA(n_components=n_components)
-
-	pca_X = pca.fit_transform(X)
-
-	for i,p in enumerate(posts):
-		post_to_vec[p] = pca_X[i]
-
-	print(post_to_vec)
-
-
-
-	return post_to_vec, pca
-
-			
 
 
 
