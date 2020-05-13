@@ -16,9 +16,9 @@ class PostClassification:
 		if(modelType == "LogReg"):
 			self.model = linear_model.LogisticRegression(class_weight = 'balanced')
 		if(modelType == "LinearSVM"):
-			self.model = svm.SVC(class_weight = 'balanced',kernel='linear')
+			self.model = svm.SVC(class_weight = 'balanced',kernel='linear', probability = True)
 		if(modelType == "RbfSVM"):
-			self.model = svm.SVC(class_weight = 'balanced',kernel='rbf')
+			self.model = svm.SVC(class_weight = 'balanced',kernel='rbf', probability = True)
 		if(modelType == "AdaBoost"):
 			self.model = ensemble.AdaBoostClassifier(n_estimators=1000)
 		if(modelType == "RandomForest"):
@@ -62,8 +62,27 @@ class PostClassification:
 		if(self.modelType == "MLP"):
 			y_pred = self.model.predict(X)
 
-
 		return y_pred
+
+
+	def test_probability(self,X):
+
+		if(self.modelType == "LogReg"):
+			y_prob = self.model.predict_proba(X)
+		if(self.modelType == "LinearSVM"):
+			y_prob = self.model.predict_proba(X)
+		if(self.modelType == "RbfSVM"):
+			y_prob = self.model.predict_proba(X)
+		if(self.modelType == "AdaBoost"):
+			y_prob = self.model.predict_proba(X)
+		if(self.modelType == "RandomForest"):
+			y_prob = self.model.predict_proba(X)
+		if(self.modelType == "MLP"):
+			y_prob = self.model.predict_proba(X)
+
+		return y_prob
+
+
 
 
 	def get_metrics(self,y_true, y_pred):
