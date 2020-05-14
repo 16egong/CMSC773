@@ -112,7 +112,7 @@ def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components=40,
 
 		post_to_vec[k] = (pca_vector, [1 if v[2] == 'd' else 0] )
 
-	return post_to_vec
+	return pca_model, post_to_vec
 
 
 
