@@ -3,28 +3,29 @@ from sklearn import svm
 from sklearn import ensemble
 from sklearn import neural_network
 from sklearn import linear_model
+from sklearn import model_selection
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 import matplotlib.pyplot as plt
 
 class PostClassification:
 
 
-	def __init__(self, modelType):
+	def __init__(self, modelType, gridSearch = False):
 
 		self.modelType = modelType
 
 		if(modelType == "LogReg"):
-			self.model = linear_model.LogisticRegression(class_weight = 'balanced')
+			self.model = linear_model.LogisticRegression(class_weight = 'balanced', C = 0.2)
 		if(modelType == "LinearSVM"):
-			self.model = svm.SVC(class_weight = 'balanced',kernel='linear', probability = True)
+			self.model = svm.SVC(class_weight = 'balanced',kernel='linear', probability = True, C = 1)
 		if(modelType == "RbfSVM"):
-			self.model = svm.SVC(class_weight = 'balanced',kernel='rbf', probability = True)
+			self.model = svm.SVC(class_weight = 'balanced',kernel='rbf', probability = True,  C=1)
 		if(modelType == "AdaBoost"):
 			self.model = ensemble.AdaBoostClassifier(n_estimators=1000)
 		if(modelType == "RandomForest"):
 			self.model = ensemble.RandomForestClassifier(n_estimators=200, max_depth = 100, min_samples_leaf = 1)
 		if(modelType == "MLP"):
-			self.model = neural_network.MLPClassifier(hidden_layer_sizes=(64,64,64), max_iter = 500, activation = 'relu', verbose=True)		
+			self.model = neural_network.MLPClassifier(hidden_layer_sizes=(32,32,10), max_iter = 500, activation = 'relu', verbose=True)		
 
 
 
@@ -32,7 +33,7 @@ class PostClassification:
 	#
 	# X: numpy array of training data: (num_observations, num_features)
 	# y: numpy array of ground truth values: (num_observations)
-	def train(self,X,y, print = False):
+	def train(self,X,y):
 
 		if(self.modelType == "LogReg"):
 			self.model.fit(X,y)
@@ -82,6 +83,29 @@ class PostClassification:
 
 		return y_prob
 
+
+	def train_grid_search_CV(self,X,y, param_dict, groups):
+
+		if(self.modelType == "LogReg"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+		if(self.modelType == "RbfSVM"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+		if(self.modelType == "LinearSVM"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+		if(self.modelType == "AdaBoost"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+		if(self.modelType == "RandomForest"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+		if(self.modelType == "MLP"):
+			self.model= model_selection.GridSearchCV(self.model, param_dict,verbose=2)
+			self.model.fit(X,y)
+
+		print(self.model.best_params_)
 
 
 
