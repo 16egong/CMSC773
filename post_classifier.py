@@ -23,9 +23,9 @@ class PostClassification:
 		if(modelType == "AdaBoost"):
 			self.model = ensemble.AdaBoostClassifier(n_estimators=1000)
 		if(modelType == "RandomForest"):
-			self.model = ensemble.RandomForestClassifier(n_estimators=200, max_depth = 100, min_samples_leaf = 1)
+			self.model = ensemble.RandomForestClassifier(n_estimators=200, max_depth = 50, min_samples_leaf = 1)
 		if(modelType == "MLP"):
-			self.model = neural_network.MLPClassifier(hidden_layer_sizes=(32,32,10), max_iter = 500, activation = 'relu', verbose=True)		
+			self.model = neural_network.MLPClassifier(hidden_layer_sizes=(64,64,64), max_iter = 500, activation = 'relu', verbose=True)		
 
 
 

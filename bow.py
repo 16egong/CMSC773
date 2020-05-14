@@ -80,28 +80,33 @@ def generate_vocabulary(post_to_data):
 	return words_to_index, index_to_words
 
 
-def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components=40, batch_size = 500):
+def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components=40, batch_size = 500, pca_model = None):
 
 	post_to_vec = {}
 
 
 	vocab_len = len(words_to_index)
 
-	i_pca = IncrementalPCA(n_components=n_components)
+	if(pca_model is None):
+		i_pca = IncrementalPCA(n_components=n_components)
+	else:
+		i_pca = pca_model
 
 	vectors = []
 
-	for k,v in tqdm.tqdm(post_to_data.items()):
 
-		if(len(vectors) == batch_size):
-			vectors = np.stack(vectors)
+	if(pca_model is None):
+		for k,v in tqdm.tqdm(post_to_data.items()):
 
-			i_pca.partial_fit(vectors)
+			if(len(vectors) == batch_size):
+				vectors = np.stack(vectors)
 
-			vectors = []
+				i_pca.partial_fit(vectors)
+
+				vectors = []
 
 
-		vectors.append(get_vector_from_post(v,words_to_index))
+			vectors.append(get_vector_from_post(v,words_to_index))
 
 
 	for k,v in tqdm.tqdm(post_to_data.items()):
@@ -112,7 +117,7 @@ def get_PCA_vectors_from_post_set(post_to_data, words_to_index, n_components=40,
 
 		post_to_vec[k] = (pca_vector, [1 if v[2] == 'd' else 0] )
 
-	return pca_model, post_to_vec
+	return i_pca, post_to_vec
 
 
 
