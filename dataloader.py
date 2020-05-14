@@ -24,10 +24,14 @@ def load_posts(PATH, user_subset = None, append_title = False):
     post_title = data['post_title']
     posts = data['post_body']
     
+    print("Flagging empty posts")
+    flag = [type(post) == type("") for post in tqdm.tqdm(posts)]
+    
     if append_title:
         combined_posts = [None] * len(posts)
-        for i in index:
-            combined_posts[i] = str(post_title[i]) + ((" . " + posts[i]) if type(posts[i]) == type("") else "")
+        print("Appending Titles")
+        for i in tqdm.tqdm(index):
+            combined_posts[i] = str(post_title[i]) + ((" . " + posts[i]) if flag[i] else "")
     
         posts = combined_posts
     
@@ -72,7 +76,7 @@ def load_posts(PATH, user_subset = None, append_title = False):
         
     post_to_metadata = {}
     for i in index:
-        post_to_metadata[post_ids[i]] = (timestamps[i], subreddits[i], post_title[i], type(posts[i]) == type(""))
+        post_to_metadata[post_ids[i]] = (timestamps[i], subreddits[i], post_title[i], flag[i])
     
     return user_to_post, post_to_words, post_to_metadata
     
