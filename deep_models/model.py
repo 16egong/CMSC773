@@ -88,7 +88,7 @@ class Bert4Clf(nn.Module):
 
     def validate_model(self, input_ids, attention_masks, labels, user_ids, batch_size=8):
         num_incorrect = 0
-        y_pred_all = []
+        # y_pred_all = []
         user_true_pred_lbls = {uid: [] for uid in np.unique(user_ids)}
 
         self.eval()
@@ -116,14 +116,14 @@ class Bert4Clf(nn.Module):
             y_pred = torch.argmax(torch.softmax(logits, dim=1), dim=1).tolist()
 
             num_incorrect += sum([abs(tup[0] - tup[1]) for tup in zip(batch_labels.flatten(), y_pred)])
-            y_pred_all.extend(y_pred)
+            # y_pred_all.extend(y_pred)
 
             for j, user in enumerate(batch_user_ids):
                 user_true_pred_lbls[user].append((batch_labels[j], y_pred[j]))
 
         print("Accuracy: {:.2f} {:s}".format((num_samples - num_incorrect) / num_samples * 100, '%'))
 
-        return y_pred_all, user_true_pred_lbls
+        return user_true_pred_lbls
 
     def setup_optimizer(self):
         large_lr_parameters_keywords = [
