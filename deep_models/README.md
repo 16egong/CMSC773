@@ -1,6 +1,7 @@
 ### Processing the data
 
-To process the data run:
+---
+Bert accepts a fixed length of 512 tokens per sample.  It also requires a specialized tokenizer to prepare data for mdoeling using BERT.  To process the data run:
 
 ```shell script
 python process_data.py --load_dir load_dir --save_dir save_dir
@@ -24,6 +25,7 @@ python process_data.py --load_dir load_dir --save_dir save_dir --filter --expert
 
 ### Training a deep model
 
+---
 Initialize a model:
 
 ```python
@@ -50,6 +52,7 @@ For more details, please see the included notebooks.
 
 ### Validating a model
 
+---
 Load weights from a trained model
 
 ```python
@@ -77,3 +80,16 @@ Finally, calculate and print various performance scores
 from deep_models.utils import calculate_metrics
 calculate_metrics(user_true_pred_lbls, labels)
 ```
+
+### Visualizing attention
+
+---
+Please see the included notebook for usage.
+
+
+### Acknowledgments
+
+---
+We incorporated code from the following repos:
+- https://github.com/huggingface/pytorch-pretrained-BERT
+- https://github.com/jessevig/bertviz
