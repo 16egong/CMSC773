@@ -108,11 +108,15 @@ if __name__ == '__main__':
         type=str, default='Documents/CL2/umd_reddit_suicidewatch_dataset_v2/processed_data',
         )
     parser.add_argument(
-        "--filter", help="filter data from suicide watch",
+        "--filter", help="filter data from certain subredits",
         action="store_true",
         )
     parser.add_argument(
         "--test", help="train/test",
+        action="store_true",
+        )
+    parser.add_argument(
+        "--expert", help="expert/crowd",
         action="store_true",
         )
 
@@ -124,14 +128,24 @@ if __name__ == '__main__':
     os.makedirs(save_dir, exist_ok=True)
 
     if args.test:
-        POSTPATH = os.path.join(load_dir, 'crowd/test/shared_task_posts_test.csv')
-        LABELPATH = os.path.join(load_dir, 'crowd/test/crowd_test_C.csv')
-        USERPATH = os.path.join(load_dir, 'crowd/test/task_C_test.posts.csv')
+        if args.expert:
+            POSTPATH = os.path.join(load_dir, 'expert/expert_posts.csv')
+            LABELPATH = os.path.join(load_dir, 'expert/expert.csv')
+        else:
+            POSTPATH = os.path.join(load_dir, 'crowd/test/shared_task_posts_test.csv')
+            LABELPATH = os.path.join(load_dir, 'crowd/test/crowd_test_C.csv')
+            USERPATH = os.path.join(load_dir, 'crowd/test/task_C_test.posts.csv')
 
         if args.filter:
-            save_file = os.path.join(save_dir, 'filtered_test_data.npy')
+            if args.expert:
+                save_file = os.path.join(save_dir, 'expert_filtered_test_data.npy')
+            else:
+                save_file = os.path.join(save_dir, 'crowd_filtered_test_data.npy')
         else:
-            save_file = os.path.join(save_dir, 'test_data.npy')
+            if args.expert:
+                save_file = os.path.join(save_dir, 'expert_test_data.npy')
+            else:
+                save_file = os.path.join(save_dir, 'crowd_test_data.npy')
 
     else:
         POSTPATH = os.path.join(load_dir, 'crowd/train/shared_task_posts.csv')

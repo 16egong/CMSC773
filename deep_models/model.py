@@ -73,7 +73,7 @@ class Bert4Clf(nn.Module):
                     dtype=torch.long,
                     device=self.device)
 
-                post_loss = self(batch_inputs, batch_attention_masks, batch_labels)[0]
+                post_loss = self(batch_inputs, batch_attention_masks, batch_labels)[1]
                 post_loss /= update_feq
 
                 post_loss.backward()
