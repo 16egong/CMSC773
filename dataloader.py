@@ -5,6 +5,7 @@ import string
 import math
 import sys
 import pickle
+import random
 
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords 
@@ -24,10 +25,14 @@ def load_posts(PATH, user_subset = None, append_title = False):
     post_title = data['post_title']
     posts = data['post_body']
     
+    print("Flagging empty posts")
+    flag = [type(post) == type("") for post in tqdm.tqdm(posts)]
+    
     if append_title:
         combined_posts = [None] * len(posts)
-        for i in index:
-            combined_posts[i] = str(post_title[i]) + ((" . " + posts[i]) if type(posts[i]) == type("") else "")
+        print("Appending Titles")
+        for i in tqdm.tqdm(index):
+            combined_posts[i] = str(post_title[i]) + ((" . " + posts[i]) if flag[i] else "")
     
         posts = combined_posts
     
@@ -72,7 +77,7 @@ def load_posts(PATH, user_subset = None, append_title = False):
         
     post_to_metadata = {}
     for i in index:
-        post_to_metadata[post_ids[i]] = (timestamps[i], subreddits[i], post_title[i])
+        post_to_metadata[post_ids[i]] = (timestamps[i], subreddits[i], post_title[i], flag[i])
     
     return user_to_post, post_to_words, post_to_metadata
     
@@ -97,7 +102,7 @@ def load_classification(PATH, user_to_post, post_to_words, post_to_metadata, use
     
 # Filters posts from mental health related subreddits
 # Also returns a dict of users to timestamps of their SW posts and a dict of only SW posts
-def filter_posts(post_to_label, post_to_metadata):
+def filter_posts(post_to_label, post_to_metadata, filter_images=False):
     subreddits_to_filter = ["Anger", "BPD", "EatingDisorders", "MMFB", "StopSelfHarm", "SuicideWatch", "addiction", 
                             "alcoholism", "depression", "feelgood", "getting over it", "hardshipmates", "mentalhealth", 
                             "psychoticreddit", "ptsd", "rapecounseling", "schizophrenia", "socialanxiety", "survivorsofabuse", "traumatoolbox"]
@@ -114,21 +119,46 @@ def filter_posts(post_to_label, post_to_metadata):
             SW_dict[post] = post_to_label[post]
             
         if subreddit not in subreddits_to_filter:
-            filtered_dict[post] = post_to_label[post]
+            img_flag = post_to_metadata[post][3]
+            if(not filter_images or img_flag):
+                filtered_dict[post] = post_to_label[post]
     return filtered_dict, SW_dict, users_to_SWtimestamps
     
-def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 2):
+def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 2, filter_control = False, filter_direction = False, filter_first = False):
     filtered_dict = {}
     print("Filtering posts far away from SW posts...")
-    for post in tqdm.tqdm(post_to_label.keys()):
+    
+    control_user_times = {}
+    keys = post_to_label.keys()
+    if(filter_control):
+        keys = list(keys)
+        random.shuffle(keys)
+        
+    for post in tqdm.tqdm(keys):
         user, words, label = post_to_label[post]
         time = post_to_metadata[post][0]
         SWtimes = sw_timestamps[user]
+        
+        if (filter_control):
+            if len(SWtimes) == 0:
+                if user in control_user_times:
+                    SWtimes = control_user_times[user]
+                else:
+                    control_user_times[user] = [time]
+                    SWtimes = [time]
+        
         if len(SWtimes) > 0:
             near = False
+            if filter_first:
+                SWtimes = [min(SWtimes)]
             for time_SW in SWtimes:
-                if abs(time - time_SW) < thresh:
-                    near = True
+                diff = time_SW - time
+                if not filter_direction:
+                    if abs(diff) < thresh:
+                        near = True
+                else:
+                    if diff > 0 and diff < thresh:
+                        near = True
             if near:
                 filtered_dict[post] = (user, words, label)
         else:
@@ -207,10 +237,11 @@ def load_user_subset_from_train(PATH, subset = 100):
 # LABELPATH = './crowd/train/crowd_train.csv'
 
 # Loading a subset of data, the subset size is 100, which means a subset of 100 users from given classification file.
-# POSTPATH = './crowd/train/shared_task_posts.csv'
-# LABELPATH = './crowd/train/crowd_train.csv'
-# USERPATH = './crowd/train/task_C_train.posts.csv'
+# POSTPATH = './Data/crowd/train/shared_task_posts.csv'
+# LABELPATH = './Data/crowd/train/crowd_train.csv'
+# USERPATH = './Data/crowd/train/task_C_train.posts.csv'
 # users = load_user_subset_from_train(USERPATH, subset = 100)
 # user_to_post, post_to_words, post_to_metadata = load_posts(POSTPATH, user_subset = users)
 # post_to_label = load_classification(LABELPATH, user_to_post, post_to_words, post_to_metadata, user_subset = users)
-# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata)
+# filtered_data, sw_posts, sw_timestamps = filter_posts(post_to_label, post_to_metadata, filter_images=True)
+# print(filtered_data)
