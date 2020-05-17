@@ -7,141 +7,86 @@ import torch
 from transformers import BertTokenizer
 
 
-def proc(save_file, mode='post'):
+def proc(save_file, filter_data=True):
     post_data = pd.read_csv(POSTPATH)
     label_data = pd.read_csv(LABELPATH)
 
     model_version = 'bert-base-uncased'
     tokenizer = BertTokenizer.from_pretrained(model_version, do_lower_case=True)
 
-    if mode == 'post':
-        post_clf_data_processed = {}
+    subreddits_to_filter = ["Anger", "BPD", "EatingDisorders", "MMFB", "StopSelfHarm", "SuicideWatch", "addiction",
+                            "alcoholism", "depression", "feelgood", "getting over it", "hardshipmates", "mentalhealth",
+                            "psychoticreddit", "ptsd", "rapecounseling", "schizophrenia", "socialanxiety", "survivorsofabuse", "traumatoolbox"]
 
-        for user_id in tqdm(label_data['user_id']):
-            df = post_data[post_data['user_id'] == user_id]
-            for i in range(len(df)):
-                data_dict = {
-                    'user_id': user_id,
-                    'post_title': df.iloc[i]['post_title'],
-                    'post_body': df.iloc[i]['post_body'],
-                    'label': label_data[label_data['user_id'] == user_id].label.item(),
-                    'subreddit': df.iloc[i]['subreddit'],
-                    'timestamp': df.iloc[i]['timestamp'],
-                }
+    if filter_data:
+        print('Filtering out data from the following subreddits:\n\n{}\n'.format(subreddits_to_filter))
 
-                post_clf_data_processed.update({df.iloc[i]['post_id']: data_dict})
+    user_clf_data_processed = {}
 
-        labels_all = []
-        train_docs = []
-        for key, dict_ in post_clf_data_processed.items():
-            label = dict_['label']
-
-            if dict_['post_body'] is not np.nan:
-                post_body = dict_['post_body']
-            else:
-                post_body = ""
-
-            if dict_['post_title'] is not np.nan:
-                post_title = dict_['post_title']
-            else:
-                post_title = ""
-
-            if label in ['a', 'b', 'c']:
-                labels_all.append(0)
-                train_docs.append((post_body, post_title))
-            elif label == 'd':
-                labels_all.append(1)
-                train_docs.append((post_body, post_title))
-            else:
+    for user_id in tqdm(label_data['user_id']):
+        df = post_data[post_data['user_id'] == user_id]
+        posts_list = []
+        labels_list = []
+        for i in range(len(df)):
+            if df.iloc[i]['subreddit'] in subreddits_to_filter and filter_data:
                 continue
-
-        input_ids_all = []
-        attention_masks_all = []
-        for sentence_a, sentence_b in tqdm(train_docs):
-            if sentence_a is np.nan:
-                sent = sentence_b
-            elif sentence_b is np.nan:
-                sent = sentence_a
+            post_title = df.iloc[i]['post_title']
+            post_body = df.iloc[i]['post_body']
+            if post_title is np.nan:
+                doc = post_body
+            elif post_body is np.nan:
+                doc = post_title
+            elif post_title is np.nan and post_body is np.nan:
+                continue
             else:
-                sent = sentence_a + '. ' + sentence_b
-            inputs = tokenizer.encode_plus(sent[:512], return_tensors='pt',
-                                           add_special_tokens=True, pad_to_max_length=True)
+                doc = post_title + '. ' + post_body
 
-            input_ids = inputs['input_ids']
-            attention_masks = inputs['attention_mask']
+            posts_list.append(doc)
+            labels_list.append(label_data[label_data['user_id'] == user_id].label.item())
 
-            input_ids_all.append(input_ids)
-            attention_masks_all.append(attention_masks)
+        user_clf_data_processed.update({user_id: (posts_list, labels_list)})
 
-        x = (np.concatenate(input_ids_all), np.concatenate(attention_masks_all))
-        y = np.reshape(labels_all, (-1,))
+    user_clf_data_all = {}
+    for user_id, data_tuple in user_clf_data_processed.items():
+        labels_list = data_tuple[1]
+        lbl = np.unique(labels_list)
 
-        np.save(save_file, (x, y))
-
-    elif mode == 'user':
-        user_clf_data_processed = {}
-
-        for user_id in tqdm(label_data['user_id']):
-            df = post_data[post_data['user_id'] == user_id]
-            posts_list = []
-            labels_list = []
-            for i in range(len(df)):
-                post_title = df.iloc[i]['post_title']
-                post_body = df.iloc[i]['post_body']
-                if post_title is np.nan:
-                    doc = post_body
-                elif post_body is np.nan:
-                    doc = post_title
-                elif post_title is np.nan and post_body is np.nan:
-                    continue
-                else:
-                    doc = post_title + '. ' + post_body
-
-                posts_list.append(doc)
-                labels_list.append(label_data[label_data['user_id'] == user_id].label.item())
-
-            user_clf_data_processed.update({user_id: (posts_list, labels_list)})
-
-        user_clf_data_all = {}
-        for user_id, data_tuple in user_clf_data_processed.items():
-            labels_list = data_tuple[1]
-            lbl = np.unique(labels_list)
-
+        try:
             if lbl[0] in ['a', 'b', 'c']:
                 current_label = 0
             elif lbl[0] == 'd':
                 current_label = 1
             else:
                 continue
+        except IndexError:
+            print('messy labels. moving on')
+            continue
 
-            try:
-                inputs_list = [tokenizer.encode_plus(
-                    item[:512],
-                    return_tensors='pt',
-                    add_special_tokens=True,
-                    pad_to_max_length=True) for item in data_tuple[0]]
-            except TypeError:
-                print('messy data point. moving on')
-                continue
+        try:
+            inputs_list = [tokenizer.encode_plus(
+                item[:512],
+                return_tensors='pt',
+                add_special_tokens=True,
+                pad_to_max_length=True) for item in data_tuple[0]]
+        except TypeError:
+            print('messy data point. moving on')
+            continue
 
-            input_ids_list = [item['input_ids'] for item in inputs_list]
-            attention_masks_list = [item['attention_mask'] for item in inputs_list]
+        input_ids_list = [item['input_ids'] for item in inputs_list]
+        attention_masks_list = [item['attention_mask'] for item in inputs_list]
 
-            input_ids = torch.cat(input_ids_list)
-            attention_masks = torch.cat(attention_masks_list)
+        input_ids = torch.cat(input_ids_list)
+        attention_masks = torch.cat(attention_masks_list)
 
-            _data_dict = {
-                'input_ids': to_np(input_ids),
-                'attention_masks': to_np(attention_masks),
-                'label': current_label,
-            }
+        _data_dict = {
+            'input_ids': to_np(input_ids),
+            'attention_masks': to_np(attention_masks),
+            'label': current_label,
+        }
 
-            user_clf_data_all.update({user_id: _data_dict})
+        user_clf_data_all.update({user_id: _data_dict})
 
         np.save(save_file, user_clf_data_all)
-
-    else:
-        raise ValueError("Invalid mode")
 
 
 def to_np(x):
@@ -154,8 +99,6 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("mode", help="classification mode in ['user', 'post']", type=str)
-
     parser.add_argument(
         "--load_dir", help="dir where data is stored, default: ~/Documents/CL2/umd_reddit_suicidewatch_dataset_v2",
         type=str, default='Documents/CL2/umd_reddit_suicidewatch_dataset_v2',
@@ -165,14 +108,15 @@ if __name__ == '__main__':
         type=str, default='Documents/CL2/umd_reddit_suicidewatch_dataset_v2/processed_data',
         )
     parser.add_argument(
+        "--filter", help="filter data from suicide watch",
+        action="store_true",
+        )
+    parser.add_argument(
         "--test", help="train/test",
         action="store_true",
         )
 
     args = parser.parse_args()
-
-    if args.mode not in ['post', 'user']:
-        raise ValueError("Invalid mode entered")
 
     home_dir = os.environ['HOME']
     load_dir = os.path.join(home_dir, args.load_dir)
@@ -184,13 +128,19 @@ if __name__ == '__main__':
         LABELPATH = os.path.join(load_dir, 'crowd/test/crowd_test_C.csv')
         USERPATH = os.path.join(load_dir, 'crowd/test/task_C_test.posts.csv')
 
-        save_file = os.path.join(save_dir, '{}_clf_test_data.npy'.format(args.mode))
+        if args.filter:
+            save_file = os.path.join(save_dir, 'filtered_test_data.npy')
+        else:
+            save_file = os.path.join(save_dir, 'test_data.npy')
 
     else:
         POSTPATH = os.path.join(load_dir, 'crowd/train/shared_task_posts.csv')
         LABELPATH = os.path.join(load_dir, 'crowd/train/crowd_train.csv')
         USERPATH = os.path.join(load_dir, 'crowd/train/task_C_train.posts.csv')
 
-        save_file = os.path.join(save_dir, '{}_clf_train_data.npy'.format(args.mode))
+        if args.filter:
+            save_file = os.path.join(save_dir, 'filtered_train_data.npy')
+        else:
+            save_file = os.path.join(save_dir, 'train_data.npy')
 
-    proc(save_file, args.mode)
+    proc(save_file, args.filter)

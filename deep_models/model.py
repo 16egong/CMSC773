@@ -1,3 +1,6 @@
+import numpy as np
+from tqdm import tqdm
+
 import torch
 from torch import nn
 from transformers import BertModel, BertTokenizer
@@ -33,15 +36,94 @@ class Bert4Clf(nn.Module):
         pooled_outputs = self.post_dropout(pooled_outputs)
 
         post_logits = self.post_classifier(pooled_outputs)
-        user_logits = self.user_classifier(pooled_outputs)
-
-        outputs = (post_logits, user_logits)
+        outputs = (post_logits,)
 
         if labels is not None:
             post_loss = self.loss_fn(post_logits.view(-1, self.num_classes), labels.view(-1))
             outputs += (post_loss,)
 
         return outputs
+
+    def train_model(self, input_ids, attention_masks, labels, batch_size=4, update_feq=32, nb_epochs=5):
+
+        num_samples = len(input_ids)
+        num_training_steps_per_epoch = int(np.ceil(num_samples / batch_size))
+
+        post_loss_history = []
+
+        self.train()
+
+        for i in range(nb_epochs):
+            self.optimizer.zero_grad()
+            shuffle_indices = torch.randperm(num_samples)
+
+            for j in range(num_training_steps_per_epoch):
+                batch_indices = slice(j * batch_size, (j + 1) * batch_size)
+
+                batch_inputs = torch.tensor(
+                    input_ids[shuffle_indices][batch_indices],
+                    dtype=torch.long,
+                    device=self.device)
+                batch_attention_masks = torch.tensor(
+                    attention_masks[shuffle_indices][batch_indices],
+                    dtype=torch.long,
+                    device=self.device)
+                batch_labels = torch.tensor(
+                    labels[shuffle_indices][batch_indices],
+                    dtype=torch.long,
+                    device=self.device)
+
+                post_loss = self(batch_inputs, batch_attention_masks, batch_labels)[0]
+                post_loss /= update_feq
+
+                post_loss.backward()
+                post_loss_history.append(post_loss.item())
+
+                if (j + 1) % update_feq == 0:
+                    print(i, j, post_loss.item())
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
+
+        return post_loss_history
+
+    def validate_model(self, input_ids, attention_masks, labels, user_ids, batch_size=8):
+        num_incorrect = 0
+        y_pred_all = []
+        user_true_pred_lbls = {uid: [] for uid in np.unique(user_ids)}
+
+        self.eval()
+
+        num_samples = len(input_ids)
+        for i in tqdm(range(int(np.ceil(num_samples / batch_size)))):
+            indices = slice(i * batch_size, (i + 1) * batch_size)
+
+            batch_input_ids = torch.tensor(
+                input_ids[indices],
+                dtype=torch.long,
+                device=self.device
+            )
+            batch_attention_masks = torch.tensor(
+                attention_masks[indices],
+                dtype=torch.long,
+                device=self.device
+            )
+            batch_labels = labels[indices]
+            batch_user_ids = user_ids[indices]
+
+            with torch.no_grad():
+                logits = self(batch_input_ids, batch_attention_masks)[0]
+
+            y_pred = torch.argmax(torch.softmax(logits, dim=1), dim=1).tolist()
+
+            num_incorrect += sum([abs(tup[0] - tup[1]) for tup in zip(batch_labels.flatten(), y_pred)])
+            y_pred_all.extend(y_pred)
+
+            for j, user in enumerate(batch_user_ids):
+                user_true_pred_lbls[user].append((batch_labels[j], y_pred[j]))
+
+        print("Accuracy: {:.2f} {:s}".format((num_samples - num_incorrect) / num_samples * 100, '%'))
+
+        return y_pred_all, user_true_pred_lbls
 
     def setup_optimizer(self):
         large_lr_parameters_keywords = [
