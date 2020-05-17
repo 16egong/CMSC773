@@ -5,6 +5,7 @@ import string
 import math
 import sys
 import pickle
+import random
 
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords 
@@ -123,18 +124,41 @@ def filter_posts(post_to_label, post_to_metadata, filter_images=False):
                 filtered_dict[post] = post_to_label[post]
     return filtered_dict, SW_dict, users_to_SWtimestamps
     
-def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 2):
+def filter_near_SW(post_to_label, post_to_metadata, sw_timestamps, thresh = 604800 * 2, filter_control = False, filter_direction = False, filter_first = False):
     filtered_dict = {}
     print("Filtering posts far away from SW posts...")
-    for post in tqdm.tqdm(post_to_label.keys()):
+    
+    control_user_times = {}
+    keys = post_to_label.keys()
+    if(filter_control):
+        keys = list(keys)
+        random.shuffle(keys)
+        
+    for post in tqdm.tqdm(keys):
         user, words, label = post_to_label[post]
         time = post_to_metadata[post][0]
         SWtimes = sw_timestamps[user]
+        
+        if (filter_control):
+            if len(SWtimes) == 0:
+                if user in control_user_times:
+                    SWtimes = control_user_times[user]
+                else:
+                    control_user_times[user] = [time]
+                    SWtimes = [time]
+        
         if len(SWtimes) > 0:
             near = False
+            if filter_first:
+                SWtimes = [min(SWtimes)]
             for time_SW in SWtimes:
-                if abs(time - time_SW) < thresh:
-                    near = True
+                diff = time_SW - time
+                if not filter_direction:
+                    if abs(diff) < thresh:
+                        near = True
+                else:
+                    if diff > 0 and diff < thresh:
+                        near = True
             if near:
                 filtered_dict[post] = (user, words, label)
         else:
