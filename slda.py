@@ -94,7 +94,7 @@ def vectorize_data_set(mdl, FOLDERPATH):
     post_to_vec = get_topic_vecs(mdl, post_to_data)
     X = np.array([post_to_vec[post][0] for post in post_to_vec.keys()])
     Y = np.array([post_to_vec[post][1] for post in post_to_vec.keys()])
-    return X,Y
+    return X,Y, post_to_vec
     
 
 # Usage Example
