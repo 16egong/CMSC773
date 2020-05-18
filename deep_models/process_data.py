@@ -8,6 +8,11 @@ from transformers import BertTokenizer
 
 
 def proc(save_file, filter_data=True):
+    """
+    :param save_file: save_dir + file_name
+    :param filter_data: whether to filter data from certain subredits
+    :return:
+    """
     post_data = pd.read_csv(POSTPATH)
     label_data = pd.read_csv(LABELPATH)
 
@@ -90,6 +95,10 @@ def proc(save_file, filter_data=True):
 
 
 def to_np(x):
+    """
+    :param x: Type [torch.Tensor]
+    :return: Type [numpy.nparray]
+    """
     if isinstance(x, np.ndarray):
         return x
     return x.data.cpu().numpy()

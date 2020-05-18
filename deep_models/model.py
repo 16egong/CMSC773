@@ -7,7 +7,7 @@ from transformers import BertModel, BertTokenizer
 
 
 class Bert4Clf(nn.Module):
-    def __init__(self, use_cuda=False, joint_training=False):
+    def __init__(self, use_cuda=False, joint_training=True):
         super(Bert4Clf, self).__init__()
 
         self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
@@ -32,6 +32,12 @@ class Bert4Clf(nn.Module):
         self.setup_optimizer()
 
     def forward(self, input_ids, attention_masks, labels=None):
+        """
+        :param input_ids: batch_size x 512 [Type: torch.LongTensor]
+        :param attention_masks: batch_size x 512 [Type: torch.LongTensor]
+        :param labels: batch_size X 1 [Type: torch.LongTensor] (optional, provide when training)
+        :return: (logits,) or (logits, loss) if labels are not None
+        """
         pooled_outputs = self.bert(input_ids, attention_mask=attention_masks)[1]
         pooled_outputs = self.post_dropout(pooled_outputs)
 
@@ -45,6 +51,15 @@ class Bert4Clf(nn.Module):
         return outputs
 
     def train_model(self, input_ids, attention_masks, labels, batch_size=4, update_feq=32, nb_epochs=5):
+        """
+        :param input_ids: num_samples x 512 [Type: torch.LongTensor]
+        :param attention_masks: num_samples x 512 [Type: torch.LongTensor]
+        :param labels: num_samples x 1 [Type: torch.LongTensor]
+        :param batch_size: batch sizes larger than ~8 won't fit on a typical GPU 12 G memory
+        :param update_feq: the frequency at which weights are updated
+        :param nb_epochs: number of epochs for this training session
+        :return: loss_history
+        """
 
         num_samples = len(input_ids)
         num_training_steps_per_epoch = int(np.ceil(num_samples / batch_size))
@@ -87,6 +102,14 @@ class Bert4Clf(nn.Module):
         return post_loss_history
 
     def validate_model(self, input_ids, attention_masks, labels, user_ids, batch_size=8):
+        """
+        :param input_ids: num_samples x 512 [Type: torch.LongTensor]
+        :param attention_masks: num_samples x 512 [Type: torch.LongTensor]
+        :param labels: num_samples x 1 [Type: torch.LongTensor]
+        :param user_ids: num_samples x 1 (a user id per post)
+        :param batch_size: batch_size
+        :return: user_true_pred_lbls, disctionary containing the predicted and true labels for each post for each user
+        """
         num_incorrect = 0
         # y_pred_all = []
         user_true_pred_lbls = {uid: [] for uid in np.unique(user_ids)}

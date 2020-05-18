@@ -6,8 +6,8 @@ from sklearn.metrics import precision_recall_fscore_support
 def load_data(file_name, base_dir=None):
     """
     :param file_name: e.g. train_data.npy
-    :param base_dir: where the data is at
-    :return: [np.ndarray] input_ids, attention_masks, labels, user_ids
+    :param base_dir: directory that contains data file
+    :return: input_ids, attention_masks, labels, user_ids (all Type: [np.ndarray])
     """
     if base_dir is None:
         base_dir = 'Documents/CL2/umd_reddit_suicidewatch_dataset_v2/processed_data'
@@ -36,6 +36,12 @@ def load_data(file_name, base_dir=None):
 
 
 def calculate_metrics(user_true_pred_lbls, labels):
+    """
+    :param user_true_pred_lbls: disctionary containing the predicted and true labels for each post for each user
+    :param labels: num_samples x 1
+    :return: None
+    """
+
     num_post_correct = 0
     num_user_correct = 0
 

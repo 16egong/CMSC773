@@ -1,7 +1,7 @@
 ### Processing the data
 
 ---
-Bert accepts a fixed length of 512 tokens per sample.  It also requires a specialized tokenizer to prepare data for mdoeling using BERT.  To process the data run:
+Bert accepts a fixed length of 512 tokens per sample.  It also requires a specialized tokenizer to prepare data for mdoeling.  To process the data simply run:
 
 ```shell script
 python process_data.py --load_dir load_dir --save_dir save_dir
@@ -53,7 +53,7 @@ For more details, please see the included notebooks.
 ### Validating a model
 
 ---
-Load weights from a trained model
+Load weights from a trained model:
 
 ```python
 import torch
@@ -63,18 +63,23 @@ from deep_models.model import Bert4Clf
 model = Bert4Clf(use_cuda=True, joint_training=True)
 
 # load weights into the model
-state_dict = torch.load('/path/to/model.bin')
+state_dict = torch.load('./model_filtered_3epochs.bin')
 model.load_state_dict(state_dict)
 ```
 
-and validate
+We provide two set of weights:
+- Model trained on the entire dataset: model_3epochs.bin
+- Model trained on filtered data: model_filtered_3epochs.bin
+
+
+Validate the model using:
 
 ```python
 user_true_pred_lbls = model.validate_model(
     test_data, batch_size=4)
 ```
 
-Finally, calculate and print various performance scores
+Finally, calculate and print various performance scores:
 
 ```python
 from deep_models.utils import calculate_metrics
