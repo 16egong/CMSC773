@@ -1,7 +1,7 @@
 ### Processing the data
 
 ---
-Bert accepts a fixed length of 512 tokens per sample.  It also requires a specialized tokenizer to prepare data for mdoeling.  To process the data simply run:
+Bert accepts a fixed length of 512 tokens per sample.  It also requires a specialized tokenizer to prepare data for modeling.  To process the data simply run:
 
 ```shell script
 python process_data.py --load_dir load_dir --save_dir save_dir
@@ -68,8 +68,9 @@ model.load_state_dict(state_dict)
 ```
 
 We provide two set of weights:
-- Model trained on the entire dataset: model_3epochs.bin
-- Model trained on filtered data: model_filtered_3epochs.bin
+- Model trained on the entire dataset: [model_3epochs.bin](https://drive.google.com/open?id=16y2MnxXxS6cz2igLBt0EVE0-G0MvT6EO)
+- Model trained on filtered data: [model_filtered_3epochs.bin](https://drive.google.com/open?id=1vyQYMLy1BxvmJZtlk2mJmM0qBmFg9Q6f)
+
 
 
 Validate the model using:
