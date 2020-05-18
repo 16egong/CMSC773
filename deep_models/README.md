@@ -91,5 +91,5 @@ Please see the included notebook for usage.
 
 ---
 We incorporated code from the following repos:
-- https://github.com/huggingface/pytorch-pretrained-BERT
+- https://github.com/huggingface/transformers
 - https://github.com/jessevig/bertviz
