@@ -51,6 +51,10 @@ python3 -m pip install nltk
 python3 -m pip install tomotopy
 python3 -m pip install imblearn
 python3 -m pip install empath
+
+# for deep models
+python3 -m pip install torch
+python3 -m pip install transformers
 ```
 
 ## Notebeooks
