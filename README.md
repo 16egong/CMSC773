@@ -59,7 +59,7 @@ For more advanced options, you may filter the time span of the subset data such 
 The following example runs an sLDA feature extractor and a Logistc Regression post classifier. There are more examples in the notebook. 
 ```
 post_clf_types = ['LogReg', 'LinearSVM', 'RbfSVM', 'AdaBoost', 'RandomForest', 'MLP']
-user_clf_type = ['Max'']
+user_clf_type = ['Max']
 model, vectors, pca_model, bow_vectors, word2index, p_clf = wrapped(train_data_processed=False, 
                                                                     sLDA=True, LDA=False, BOW=False, empath=False,
                                                                     user_clf_type=user_clf_type, 
