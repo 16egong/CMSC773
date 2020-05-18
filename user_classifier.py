@@ -1,6 +1,6 @@
 from collections import Counter
 from collections import defaultdict
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, roc_auc_score
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -69,8 +69,9 @@ class UserClassification:
         precision = precision_score(y_true,y_pred)
         recall = recall_score(y_true,y_pred)
         f1 = f1_score(y_true,y_pred)
+        roc = roc_auc_score(y_true,y_pred)
 
-        return {"accuracy": accuracy,"precision": precision,"recall":recall, "f1":f1}
+        return {"accuracy": accuracy,"precision": precision,"recall":recall, "f1":f1, "roc":roc}
     
 # Example Use
 # import user_classification 

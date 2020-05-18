@@ -4,7 +4,7 @@ from sklearn import ensemble
 from sklearn import neural_network
 from sklearn import linear_model
 from sklearn import model_selection
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, roc_auc_score
 import matplotlib.pyplot as plt
 
 class PostClassification:
@@ -115,8 +115,8 @@ class PostClassification:
 		precision = precision_score(y_true,y_pred)
 		recall = recall_score(y_true,y_pred)
 		f1 = f1_score(y_true,y_pred)
-
-		return {"accuracy": accuracy,"precision":precision,"recall":recall, "f1":f1}
+		roc = roc_auc_score(y_true,y_pred)
+		return {"accuracy": accuracy,"precision": precision,"recall":recall, "f1":f1, "roc": roc}
 
 
 
