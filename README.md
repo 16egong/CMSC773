@@ -28,13 +28,17 @@ mkdir crowd_processed_expert
 ### Alter Filepaths
 Our data paths are formatted as followed:
 
+
 POSTPATH = './Data/crowd/train/shared_task_posts.csv'
 
 LABELPATH = './Data/crowd/train/crowd_train.csv'
 
-The following path is option if you would like to train a subset of the data
+
+The following path is option if you would like to train a subset of the data:
+
 
 USERPATH = './Data/crowd/train/task_C_train.posts.csv'
+
 
 Either replace all of these variables with a path relative to your local computer or change the path to fit this format. 
 
